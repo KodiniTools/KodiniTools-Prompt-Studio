@@ -90,14 +90,30 @@ chmod 600 .env && stat -c '%a %n' .env      # erwartet: 600
 
 Die beiden `read`-Zeilen einzeln einfügen, sonst verschluckt die Passwortabfrage die Folgezeile.
 
-### 2. Deployment (von Windows, bei jeder neuen Version)
+### 2. Deployment (bei jeder neuen Version)
+
+**Variante A – direkt auf dem Server** (aus einem Git-Klon, einmalig anlegen):
+
+```bash
+cd ~ && git clone https://github.com/KodiniTools/KodiniTools-Prompt-Studio.git   # nur beim ersten Mal
+cd ~/KodiniTools-Prompt-Studio && ./deploy/deploy.sh
+```
+
+Das Skript holt den aktuellen Stand (`git pull --ff-only`), baut und testet im Klon, installiert
+nach `/opt/prompt-studio`, lädt in PM2 nur `prompt-studio` neu und prüft `/health` sowie den
+Passwortschutz. Schlägt Pull, Test oder Build fehl, bleibt die laufende Installation unverändert.
+Optionen: `--skip-tests`, `--no-pull`. Der Klon darf nicht in `/opt/prompt-studio` liegen.
+
+**Variante B – von Windows:**
 
 ```powershell
 .\deploy\deploy.ps1 -Server root@kodinitools.com
 ```
 
 Das Skript baut lokal, lädt ein Archiv hoch, installiert die Laufzeit-Abhängigkeiten, startet
-PM2 neu und prüft `/health` sowie den Passwortschutz. `.env` und `data/` bleiben unberührt.
+PM2 neu und prüft `/health` sowie den Passwortschutz.
+
+In beiden Varianten bleiben `.env` und `data/` unberührt.
 
 Nach dem ersten Deployment einmal auf dem Server: `pm2 save`
 
@@ -173,6 +189,6 @@ src/stores/       studio (Arbeitszustand), library (dauerhafte Daten)
 src/components/   Formular, Vorschau, Bausteine, Favoriten/Verlauf
 shared/           Datenverträge (Zod), von Client und Server genutzt
 server/           Express: Auth, Store, Claude-Proxy
-deploy/           Nginx-Snippet, PM2-Konfiguration, PowerShell-Deployment
+deploy/           Nginx-Snippet, PM2-Konfiguration, Deployment (deploy.sh, deploy.ps1)
 tests/            Vitest: Kategorien, Stores, Server
 ```
